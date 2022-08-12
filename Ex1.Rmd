@@ -1,0 +1,146 @@
+---
+title: "Introducción a geoChronR package"
+author: "Matías Frugone-Álbarez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+La cuantificación de las incertidumbres sobre la edad es un componente crítico de las paleociencias (paleoclimatología, paleoecología, paleontología), que se ha convertido en algo habitual en estos campos en este siglo. 
+
+# Instalar el software que necesita {#instalación}
+
+Necesitan tener instalado [R (>=3.6)]. ¿Qué versión tengo?
+
+
+```{r}
+R.version
+```
+
+
+## Instalar lipdR
+
+
+El paquete `lipdR` es su puerta de entrada para trabajar con los datos de LiPD. Para instalar `lipdR`, necesitará el paquete remotes si no lo tiene ya.
+
+
+```{r, echo=TRUE, eval=FALSE}
+install.packages("remotes")
+remotes::install_github("nickmckay/lipdR",force = TRUE)
+```
+
+
+```{r , echo=TRUE, eval=FALSE}
+if(!requireNamespace("devtools")) install.packages("devtools")
+devtools::install_github("dkahle/ggmap")
+```
+
+
+## Instalando geoChronR
+
+```{r, echo=TRUE, eval=FALSE}
+devtools::install_github("nickmckay/GeoChronR")
+```
+
+
+# Datos en geoChronR
+
+
+```{r}
+library(lipdR)
+library(geoChronR)
+```
+
+```{r}
+L <- readLipd("https://lipdverse.org/Temp12k/current_version/GEOFAR_KF16_MgCa.Repschlager.2016.lpd")
+```
+
+
+
+```{r, echo=TRUE, eval=TRUE, class.source = "blackboxcode"}
+   
+ lipd <- readLipd("https://lipdverse.org/Temp12k/current_version/HeshangCave.Wang.2018.lpd")
+
+```
+
+
+# Ahora baje estos datos en la carpeta data y ejecute el siguiente linea de comando 
+
+:::: {.blackbox data-latex=""}
+::: {.exercise #LoadingLipdData}
+
+Explore [la colección Temp12k en lipdverse.org](https://lipdverse.org/Temp12k/current_version), y cargue un archivo en R usando lipdR con dos enfoques diferentes: a) directamente usando la url como arriba, y b) descargando el archivo en su ordenador, y cargándolo interactivamente. 
+
+note que la extención es ".lpd" not ".html"
+</details> 
+
+<details>
+  <summary>Haga clic para obtener una pista para \@ref(exr:LoadingLipdData)b</summary>
+   b. Ahora ve a; [the dataset](https://lipdverse.org/Temp12k/current_version/HeshangCave.Wang.2018.html) baje los datos a su pc
+
+```{r ,echo=TRUE, eval=FALSE, class.source = "blackboxcode"}
+
+lipd <- readLipd()
+```
+
+and select the file interactively. 
+</details> 
+:::
+::::
+
+
+Una vez que tenga un objeto LiPD cargado en R, hay algunas cosas que puede hacer. En primer lugar, si desea una visualización rápida y sucia de lo que hay dentro del conjunto de datos, utilice `plotSummary()`.
+
+Si sabes de antemano cuáles son las variables que quieres ploterar, puedes especificarlas así:
+
+```{r}
+summary_plot <- plotSummary(L,paleo.data.var = "temperature",chron.age.var = "age",chron.depth.var = "depthMid",chron.age.14c.var = NULL)
+
+print(summary_plot)
+```
+
+
+Pero la mayoría de las veces, sólo lo ejecutará en modo interactivo y seleccionará lo que desee. 
+
+```{r,eval=FALSE}
+plotSummary(lipd)
+```
+
+Uno de los componentes de `plotSummary()` es un mapa del sitio, que se crea con la función `mapLipd()`.
+
+
+### Extraer una variable de un objeto LiPD {#selectData}
+
+En geoChronR, a menudo es útil extraer una o dos variables de un objeto LiPD y utilizarlas para el análisis y la visualización posteriores. La función clave para ello es `selectData()`. Normalmente, la utilizará en modo interactivo para encontrar la variable que busca, ya sea en las secciones paleoData o chronData del archivo LiPD. 
+
+```{r, eval = FALSE}
+#grab the calibrated temperature record
+temp <- selectData(L,paleo.or.chron = "paleoData")
+
+#grab the original dates from the chronData
+c14 <- selectData(L,paleo.or.chron = "chronData")
+```
+
+Si hay un montón de variables en el archivo, y más o menos sabes lo que estás buscando, puedes añadir una conjetura `var.name` y lo reducirá a las opciones que parezcan probables, o seleccionará una automáticamente si está cerca. 
+
+:::: {.blackbox data-latex=""}
+::: {.exercise #selectData}
+Enter "d18o" as the var.name in selectData() y verás cómo se reducen tus opciones.
+:::
+::::
+
+Por supuesto, también puede especificar todas las opciones en `selectData()`, y luego obtener exactamente lo que quiere de forma no interactiva. Esto incluye datos de ensembleTables o summaryTables del modelo, además de los measurementTables que utiliza con más frecuencia. Por ejemplo:
+
+```{r}
+mgCa  <- selectData(L,var.name = "mg/ca",paleo.or.chron = "paleoData",table.type = "meas",meas.table.num = 1)
+```
